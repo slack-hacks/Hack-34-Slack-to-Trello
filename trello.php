@@ -14,20 +14,22 @@
 
 	// Include slack library from https://github.com/10w042/slack-api
 	include 'Slack.php';
+
+	// Include Trello API helpers
 	include 'trello/src/Trello/OAuthSimple.php';
 	include 'trello/src/Trello/Trello.php';
 
+	// Set Trello namespace
 	use \Trello\Trello;
 
-	// Create new Slack instance
+	// Create new Slack & Trello instance
 	$Slack = new Slack($slack_token);
 	$Trello = new Trello($trello_key, null, $trello_token);
 
-	// Get the last 11 messages of the channel conversation
+	// Get the last 5 messages of the channel conversation
 	$slack_data = $Slack->call('channels.history', array(
 		'channel' => $_POST['channel_id'],
-		'count' => 5,
-		'parse' => 'none'
+		'count' => 5
 	));
 
 	// Remove the last message - which will contain the trigger phrase
@@ -55,11 +57,19 @@
 	$trello_user = $Trello->members->get('me');
 
 	// Get all the boards the user has access to that are open
-	$trello_boards = $Trello->members->get($trello_user->id . '/boards', array('filter' => 'open'));
+	$trello_boards = $Trello->members->get(
+		$trello_user->id . '/boards',
+		array(
+			'filter' => 'open'
+		)
+	);
 
 	// Find the board that matches the message text
 	foreach ($trello_boards as $board) {
-		if(strpos(strtolower($board->name), $slack_board_name) !== false) {
+		if(strpos(
+			strtolower($board->name),
+			$slack_board_name
+		) !== false) {
 			$trello_board = $board;
 			break;
 		}
@@ -71,7 +81,9 @@
 	}
 
 	// Get all the lists in the board
-	$trello_lists = $Trello->boards->get($trello_board->id . '/lists');
+	$trello_lists = $Trello->boards->get(
+		$trello_board->id . '/lists'
+	);
 
 	// Get the first list of the board
 	$trello_list = $trello_lists[0];
