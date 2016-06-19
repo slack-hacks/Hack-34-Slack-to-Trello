@@ -12,9 +12,6 @@
 	// Trigger Word
 	$trigger_phrase = 'add to trello';
 
-	// Get the channel ID
-	$channelID = $_POST['channel_id'];
-
 	// Include slack library from https://github.com/10w042/slack-api
 	include 'Slack.php';
 	include 'trello/src/Trello/OAuthSimple.php';
@@ -28,7 +25,7 @@
 
 	// Get the last 11 messages of the channel conversation
 	$slack_data = $Slack->call('channels.history', array(
-		'channel' => $channelID,
+		'channel' => $_POST['channel_id'],
 		'count' => 5,
 		'parse' => 'none'
 	));
@@ -91,9 +88,10 @@
 	}
 
 	// Post the card to trello
-	$done = $Trello->lists->post($trello_list->id . '/cards', array(
+	$Trello->lists->post($trello_list->id . '/cards', array(
 		'name' => $trello_card['text'],
-		'desc' => 'Added by **' . $slack_name . '** on ' . date('jS F', $trello_card['ts'])
+		'desc' => 'Requested by **' . $slack_name .
+			'** on ' . date('jS F', $trello_card['ts'])
 	));
 
 	// Post back to board it was posted to
